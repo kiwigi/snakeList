@@ -1,3 +1,8 @@
+//-- Works, not very well.... But it works! 
+//Supposed to use database to make a 'snake list' 
+//Many features have yet to be implemented...
+
+
 //Load up the discord.js library
 const Discord = require("discord.js");
 //client is client
@@ -24,6 +29,8 @@ client.on("ready", () => {
   client.user.setActivity(`Finding snakes`);
 });
 
+  //This will react to any message from a user that is a 'snake' 
+  //For now, this feature is hard coded and doesn't use the database.
 client.on("message", async message => {
 
 
@@ -34,6 +41,8 @@ client.on("message", async message => {
       .catch(() => console.error('failed to react to snake..'));
   }
 
+  //proabbly not good practice to be putting actual IDs here (please don't look these up or anything)
+  //Again, this will all eventually be done through a database, details like these should not be avalible to be seen in the code itself....
   if (message.author.id  === "96425998089736192") {
     Promise.all([
       message.react('🐍')
@@ -55,12 +64,10 @@ client.on("message", async message => {
       .catch(() => console.error('failed to react to snake..'));
   }
 
-  // Here we separate our "command" name, and our "arguments" for the command. 
-  // e.g. if we have the message "+say Is this the real life?" , we'll get the following:
-  // command = say
-  // args = ["Is", "this", "the", "real", "life?"]
+  // Separates "command" name, and "arguments" for the command. 
   const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
   const command = args.shift().toLowerCase();
+  //not really used right now ^
 
 
   
@@ -68,6 +75,7 @@ client.on("message", async message => {
   
   if(command === "detect") {
     const m = await message.channel.send("detecting snakes.....");
+    //gets the number of rows in the database table.... This is how many 'snakes' are detected
     con.query(`SELECT * FROM snakepoints`, (err,rows) => {
     if(err) throw err;
     
@@ -81,7 +89,10 @@ client.on("message", async message => {
 if(command === "expose") {
   con.query(`SELECT * FROM snakepoints`, (err,rows) => {
   if(err) throw err;
+  //temporary, better 'leaderboard' will be implemented at some point...
   message.channel.send(`NAME:\t\t\tSNAKE POINTS:\n`);
+  //Again, this part is hard-coded! Which is bad! 
+  //Eventually the leaderboard should be able to display user-names that are optained from the database, NOT their actual names! 
   names = ['Richard','Abner','Tyler','Steven','Alex'];
   for(i=0;i<rows.length;i++){
     message.channel.send(`${names[i]}\t\t\t\t${rows[i].points}\n`);
@@ -134,20 +145,20 @@ if(command === "snakepoints"){
 
 }
 
-//--------------------------------HENTAI COMMAND--------------------------------
+//--------------------------------A VERY SILLY COMMAND--------------------------------
+  //not currently avalible
 
-  if(command === "hentai") {
-    return message.reply("I refuse to enable this kind of behaviour. Please seek help.");
-  }
+  //if(command === "") {
+    //return message.reply("I refuse to enable this kind of behaviour. Please seek help.");
+ // }
 
 //---------------------------------SAY COMMAND--------------------------------
 
   if(command === "say") {
-    // makes the bot say something and delete the message. As an example, it's open to anyone to use. 
-    // To get the "message" itself we join the `args` back into a string with spaces: 
+    // makes the bot say something and delete the message. 
     const sayMessage = args.join(" ");
-    // Then we delete the command message (sneaky, right?). The catch just ignores the error with a cute smiley thing.
-    message.delete().catch(O_o=>{}); 
+    // Then we delete the command message
+    message.delete().catch(O_o=>{}); //some smiley face for some reason
     // And we get the bot to say the thing: 
     message.channel.send(sayMessage);
   }
@@ -160,11 +171,9 @@ if(command === "snakepoints"){
     // get the delete count, as an actual number.
     const deleteCount = parseInt(args[0], 10);
     
-    // Ooooh nice, combined conditions. <3
     if(!deleteCount || deleteCount < 2 || deleteCount > 100)
       return message.reply("Please provide a number between 2 and 100 for the number of messages to delete");
     
-    // So we get our messages, and delete them. Simple enough, right?
     const fetched = await message.channel.fetchMessages({limit: deleteCount});
     message.channel.bulkDelete(fetched)
       .catch(error => message.reply(`Couldn't delete messages because of: ${error}`));
