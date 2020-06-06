@@ -69,37 +69,52 @@ client.on("message", async message => {
   const command = args.shift().toLowerCase();
   //not really used right now ^
 
-
-  
 //---------------------------------DETECT COMMAND--------------------------------
   
-  if(command === "detect") {
-    const m = await message.channel.send("detecting snakes.....");
-    //gets the number of rows in the database table.... This is how many 'snakes' are detected
-    con.query(`SELECT * FROM snakepoints`, (err,rows) => {
-    if(err) throw err;
-    
-    let snakeNum = rows.length;
-    m.edit(`${snakeNum} snakes detected!`);
-  });
+if(command === "detect") {
+  const m = await message.channel.send("detecting snakes.....");
+  //gets the number of rows in the database table.... This is how many 'snakes' are detected
+  con.query(`SELECT * FROM snakepoints`, (err,rows) => {
+  if(err) throw err;
+  
+  let snakeNum = rows.length;
+  m.edit(`${snakeNum} snakes detected!`);
+});
+}
+
+
+  
+//---------------------------------HELP COMMAND--------------------------------
+  
+  if(command === "help") {
+    message.channel.send(`Prefix:\t\t\tpls\ndetect:\t\t\tdetect the number of snakes\nexpose:\t\t\treturns a list of known snakes and their snake scores\nreport:\t\t\tadds 1 point to a persons snakescore\nsnakescore:\t\treturns selected users snakescore`);
   }
 
+  
 //---------------------------------EXPOSE COMMAND----------------------------------
 
 if(command === "expose") {
   con.query(`SELECT * FROM snakepoints`, (err,rows) => {
   if(err) throw err;
   //temporary, better 'leaderboard' will be implemented at some point...
-  message.channel.send(`NAME:\t\t\tSNAKE POINTS:\n`);
   //Again, this part is hard-coded! Which is bad! 
   //Eventually the leaderboard should be able to display user-names that are optained from the database, NOT their actual names! 
-  names = ['Richard','Abner','Tyler','Steven','Alex'];
+  var txt = 'USER: ------ TOTAL SNAKE POINTS:\n';
   for(i=0;i<rows.length;i++){
-    message.channel.send(`${names[i]}\t\t\t\t${rows[i].points}\n`);
+    
+    txt=txt.concat(`${rows[i].username} --- ${rows[i].points}\n`);
   }
+  console.log(txt);
+
+  const list = new Discord.RichEmbed()
+  .setTitle("Snake List")
+  .setThumbnail('https://images.emojiterra.com/google/android-nougat/512px/1f40d.png')
+  .setColor([186, 255, 140])
+  .setDescription(txt);
+  message.channel.send(list);
+
   });
 }  
-
 //---------------------------------REPORT COMMAND--------------------------------
 
   if(command === "report") {
@@ -113,21 +128,41 @@ if(command === "expose") {
         if(err) throw err;
 
         let sql;
+        let currentpoints = rows[0].points;
         //if person has no points, add them to the database
         if(rows.length < 1) {
-          sql = `INSERT INTO snakepoints (id, points) VALUES ('${message.mentions.users.first().id}', 1)`;
+          sql = `INSERT INTO snakepoints (id, username, points) VALUES ('${message.mentions.users.first().id}', '${message.mentions.users.first().username}', 1)`;
         //if they have points, add 1 to their points
-        }else {
+        }else if(currentpoints<19){
           let currentpoints = rows[0].points; 
           sql = `UPDATE snakepoints SET points = ${currentpoints}+1  WHERE id = '${message.mentions.users.first().id}'`;
+        }else {
+          sql = `UPDATE snakepoints SET points = 20  WHERE id = '${message.mentions.users.first().id}'`;
+          sql = `UPDATE snakepoints SET snakestatus = 1  WHERE id = '${message.mentions.users.first().id}'`;
+          message.channel.send( `<@${message.mentions.users.first().id}> is now VERIFIED SNAKE! Congrats on reaching the highest level of snakiness. 🐍`);
+            
         }
+
         con.query(sql, console.log);
       });
   }
     else{
       m.edit(`<@${message.mentions.users.first().id}> has done nothing wrong.`);
     }}
+ function chkStat(id){
+    con.query(`SELECT * FROM snakepoints WHERE id = '${id}'`, (err,rows) =>{
+    if(err) throw err;
 
+    let sql;
+    let currentpoints = rows[0].points;
+
+    if(currentpoints==20){
+      sql = `UPDATE snakepoints SET snakestatus = 1  WHERE id = '${message.mentions.users.first().id}'`;
+          message.channel.send( `<@${message.mentions.users.first().id}> is now VERIFIED SNAKE! Congrats on reaching the highest level of snakiness. 🐍`);
+    }
+  });
+
+ }
 
 
 //---------------------------------SNAKEPOINTS COMMAND----------------------------------
@@ -140,7 +175,25 @@ if(command === "snakepoints"){
     if(!rows[0]) return message.channel.send(`This user has no snake points yet! Let's all thank <@${target.id}> for not being a snake.`);
 
     let tarpoints = rows[0].points;
-    message.channel.send(`This user has:  ${tarpoints} snake points.`);
+    let status = rows[0].snakestatus;
+    
+    if(status==0){
+      const results = new Discord.RichEmbed()
+      .setColor([161, 230, 255])
+      .setFooter(`USER: ${target.tag}.`, target.displayAvatarURL)
+      .setDescription(`This user has a snake score of: ${tarpoints}`);
+      message.channel.send(results);
+    }
+    else{
+      const results = new Discord.RichEmbed()
+      .setColor([52, 235, 140])
+      .setTitle(`VERIFIED SNAKE 🐍`)
+      .setFooter(`USER: ${target.tag}.`, target.displayAvatarURL)
+      .setDescription(`This user has a snake score of: ${tarpoints}`);
+      message.channel.send(results);
+    }
+    
+    
   });
 
 }
@@ -148,9 +201,9 @@ if(command === "snakepoints"){
 //--------------------------------A VERY SILLY COMMAND--------------------------------
   //not currently avalible
 
-  //if(command === "") {
-    //return message.reply("I refuse to enable this kind of behaviour. Please seek help.");
- // }
+  if(command === "hentai") {
+    return message.reply("I refuse to enable this kind of behaviour. Please seek help.");
+  }
 
 //---------------------------------SAY COMMAND--------------------------------
 
