@@ -13,10 +13,7 @@ const config = require("./config.json");
 const mysql = require("mysql");
 //create sql connection
 var con = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "420",
-  database: "snake"
+ //// **insert mysql credentials here
 });
 //Runs wen connection is successful
 con.connect(err => {
