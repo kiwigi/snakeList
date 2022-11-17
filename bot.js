@@ -195,13 +195,6 @@ if(command === "snakepoints"){
 
 }
 
-//--------------------------------A VERY SILLY COMMAND--------------------------------
-  //not currently avalible
-
-  if(command === "hentai") {
-    return message.reply("I refuse to enable this kind of behaviour. Please seek help.");
-  }
-
 //---------------------------------SAY COMMAND--------------------------------
 
   if(command === "say") {
